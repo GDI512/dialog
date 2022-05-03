@@ -1,0 +1,13 @@
+#define IDD_WINDOW  100
+#define IDC_OFFSET  101
+#define IDC_LENGTH  102
+#define IDC_ANGLE   103
+#define IDC_TREE    104
+#define IDC_CYAN    105
+#define IDC_MAGENTA 106
+#define IDC_YELLOW  107
+#define IDC_BLACK   108
+#define IDR_ACCEL   109
+#define IDA_COPY    110
+#define IDA_EXIT    111
+#define IDI_TREE    112
