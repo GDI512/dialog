@@ -2,46 +2,59 @@
 
 #include <math.h>
 
-#define PI 3.14159265359
+#define PI      3.14159265359f
+#define RAD(X)  X * PI / 180.0f
 
-typedef struct {
-    LRESULT nOffset ;
-    LRESULT nLength ;
-    LRESULT nAngle ;
+typedef struct tagUSERDATA {
     HDC     hMemDC ;
     HBITMAP hBitmap ;
     HPEN    hPen ;
-    int     nWidth ;
-    int     nHeight ;
+    int     cxClient ;
+    int     cyClient ;
+    float   offset ;
+    float   length ;
+    float   angle ;
 } USERDATA ;
 
-static void DrawTree (USERDATA* pUser, int xPos, int yPos, double angle, int step) {
-    double length = pUser->nLength / 5.0 ;
+static void DrawTree (USERDATA* pUser, float xPos, float yPos, float angle, int step) {
     if (step > 0) {
-        int nx = xPos + (int) (cos (angle * PI / 180.0) * step * length) ;
-        int ny = yPos - (int) (sin (angle * PI / 180.0) * step * length) ;
+        float xNew = round (xPos + cos (angle) * step * pUser->length) ;
+        float yNew = round (yPos - sin (angle) * step * pUser->length) ;
         MoveToEx (pUser->hMemDC, xPos, yPos, NULL) ;
-        LineTo (pUser->hMemDC, nx, ny) ;
+        LineTo (pUser->hMemDC, xNew, yNew) ;
         MoveToEx (pUser->hMemDC, xPos, yPos, NULL) ;
-        DrawTree (pUser, nx, ny, angle - 20.0 - pUser->nAngle * 2.0, step - 1) ;
-        DrawTree (pUser, nx, ny, angle + 20.0 - pUser->nAngle * 2.0, step - 1) ;
+        DrawTree (pUser, xNew, yNew, angle - 0.349066f - pUser->angle, step - 1) ;
+        DrawTree (pUser, xNew, yNew, angle + 0.349066f - pUser->angle, step - 1) ;
     }
+}
+
+static HBITMAP SaveClientToBitmap (HWND hwnd) {
+    USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
+    HDC       hWinDC ;
+    HBITMAP   hBitmap, hOldBmp ;
+    hWinDC  = GetDC (hwnd) ;
+    hBitmap = CreateCompatibleBitmap (hWinDC, pUser->cxClient, pUser->cyClient) ;
+    hOldBmp = SelectObject (pUser->hMemDC, hBitmap) ;
+    BitBlt (pUser->hMemDC, 0, 0, pUser->cxClient, pUser->cyClient, hWinDC, 0, 0, SRCCOPY) ;
+    SelectObject (pUser->hMemDC, hOldBmp) ;
+    ReleaseDC (hwnd, hWinDC) ;
+    return hBitmap ;
 }
 
 static LRESULT OnCreate (HWND hwnd, WPARAM wParam, LPARAM lParam) {
     USERDATA* pUser ;
     HDC       hWinDC ;
     pUser = HeapAlloc (GetProcessHeap (), HEAP_ZERO_MEMORY, sizeof (USERDATA)) ;
-    SetWindowLongPtr (hwnd, 0, pUser) ;
-    hWinDC        = GetDC (hwnd) ;
+    SetWindowLongPtr (hwnd, GWLP_USERDATA, pUser) ;
+    hWinDC = GetDC (hwnd) ;
     pUser->hMemDC = CreateCompatibleDC (hWinDC) ;
-    pUser->hPen   = GetStockObject (BLACK_PEN) ;
+    pUser->hPen = GetStockObject (BLACK_PEN) ;
     ReleaseDC (hwnd, hWinDC) ;
     return 0 ;
 }
 
 static LRESULT OnDestroy (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA* pUser = GetWindowLongPtr (hwnd, 0) ;
+    USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
     DeleteObject (pUser->hPen) ;
     DeleteObject (pUser->hBitmap) ;
     DeleteDC (pUser->hMemDC) ;
@@ -50,44 +63,45 @@ static LRESULT OnDestroy (HWND hwnd, WPARAM wParam, LPARAM lParam) {
 }
 
 static LRESULT OnSize (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA* pUser = GetWindowLongPtr (hwnd, 0) ;
+    USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
     HDC       hWinDC ;
-    pUser->nWidth  = LOWORD (lParam) ;
-    pUser->nHeight = HIWORD (lParam) ;
+    pUser->cxClient = LOWORD (lParam) ;
+    pUser->cyClient = HIWORD (lParam) ;
     hWinDC = GetDC (hwnd) ;
     DeleteObject (pUser->hBitmap) ;
-    pUser->hBitmap = CreateCompatibleBitmap (hWinDC, pUser->nWidth, pUser->nHeight) ;
+    pUser->hBitmap = CreateCompatibleBitmap (hWinDC, pUser->cxClient, pUser->cyClient) ;
     ReleaseDC (hwnd, hWinDC) ;
     return 0 ;
 }
 
 static LRESULT OnPaint (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA*   pUser = GetWindowLongPtr (hwnd, 0) ;
+    USERDATA*   pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
     HDC         hWinDC ;
+    HGDIOBJ     hOldBmp, hOldPen ;
     PAINTSTRUCT paint ;
-    hWinDC = BeginPaint (hwnd, &paint) ;
-    SaveDC (pUser->hMemDC) ;
-    SelectObject (pUser->hMemDC, pUser->hBitmap) ;
-    SelectObject (pUser->hMemDC, pUser->hPen) ;
-    BitBlt (pUser->hMemDC, 0, 0, pUser->nWidth, pUser->nHeight, pUser->hMemDC, 0, 0, WHITENESS) ;
-    DrawTree (pUser, pUser->nWidth / 2 + pUser->nOffset * 4, pUser->nHeight, 90.0, 12) ;
-    BitBlt (hWinDC, 0, 0, pUser->nWidth, pUser->nHeight, pUser->hMemDC, 0, 0, SRCCOPY) ;
-    RestoreDC (pUser->hMemDC, -1) ;
+    hWinDC  = BeginPaint (hwnd, &paint) ;
+    hOldBmp = SelectObject (pUser->hMemDC, pUser->hBitmap) ;
+    hOldPen = SelectObject (pUser->hMemDC, pUser->hPen) ;
+    BitBlt (pUser->hMemDC, 0, 0, pUser->cxClient, pUser->cyClient, pUser->hMemDC, 0, 0, WHITENESS) ;
+    DrawTree (pUser, pUser->cxClient / 2.0f + pUser->offset, pUser->cyClient, RAD (90.0f), 12) ;
+    BitBlt (hWinDC, 0, 0, pUser->cxClient, pUser->cyClient, pUser->hMemDC, 0, 0, SRCCOPY) ;
+    SelectObject (pUser->hMemDC, hOldPen) ;
+    SelectObject (pUser->hMemDC, hOldBmp) ;
     EndPaint (hwnd, &paint) ;
     return 0 ;
 }
 
 static LRESULT OnSetParam (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA* pUser = GetWindowLongPtr (hwnd, 0) ;
+    USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
     switch (LOWORD (wParam)) {
     case TC_OFFSET:
-        pUser->nOffset = lParam ;
+        pUser->offset = lParam * 4.5f ;
         break ;
     case TC_LENGTH:
-        pUser->nLength = lParam ;
+        pUser->length = lParam / 4.5f ;
         break ;
     case TC_ANGLE:
-        pUser->nAngle = lParam ;
+        pUser->angle = RAD (lParam * 2.0f) ;
         break ;
     }
     InvalidateRect (hwnd, NULL, FALSE) ;
@@ -95,7 +109,7 @@ static LRESULT OnSetParam (HWND hwnd, WPARAM wParam, LPARAM lParam) {
 }
 
 static LRESULT OnSetColor (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA* pUser = GetWindowLongPtr (hwnd, 0) ;
+    USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
     DeleteObject (pUser->hPen) ;
     pUser->hPen = CreatePen (PS_SOLID, 0, lParam) ;
     InvalidateRect (hwnd, NULL, FALSE) ;
@@ -103,20 +117,8 @@ static LRESULT OnSetColor (HWND hwnd, WPARAM wParam, LPARAM lParam) {
 }
 
 static LRESULT OnClipCopy (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA* pUser = GetWindowLongPtr (hwnd, 0) ;
-    HDC       hMemDC, hWinDC ;
-    HBITMAP   hBitmap ;
-
+    HBITMAP hBitmap = SaveClientToBitmap (hwnd) ;
     OpenClipboard (hwnd) ;
-
-    hWinDC  = GetDC (hwnd) ;
-    hMemDC  = CreateCompatibleDC (hWinDC) ;
-    hBitmap = CreateCompatibleBitmap (hWinDC, pUser->nWidth, pUser->nHeight) ;
-    SelectObject (hMemDC, hBitmap) ;
-    BitBlt (hMemDC, 0, 0, pUser->nWidth, pUser->nHeight, hWinDC, 0, 0, SRCCOPY) ;
-    DeleteDC (hMemDC) ;
-    ReleaseDC (hwnd, hWinDC) ;
-
     EmptyClipboard () ;
     SetClipboardData (CF_BITMAP, hBitmap) ;
     CloseClipboard () ;
@@ -149,7 +151,7 @@ ATOM RegisterTreeClass (HINSTANCE hInstance) {
         .style         = CS_HREDRAW | CS_VREDRAW,
         .lpfnWndProc   = WndProc,
         .cbClsExtra    = 0,
-        .cbWndExtra    = sizeof (INT_PTR),
+        .cbWndExtra    = 0,
         .hInstance     = hInstance,
         .hIcon         = NULL,
         .hCursor       = LoadCursor (NULL, IDC_CROSS),
