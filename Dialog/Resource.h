@@ -1,4 +1,4 @@
-#define IDD_WINDOW  100
+#define IDD_DIALOG  100
 #define IDC_OFFSET  101
 #define IDC_LENGTH  102
 #define IDC_ANGLE   103

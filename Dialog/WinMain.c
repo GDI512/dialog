@@ -123,7 +123,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
         return 0 ;
     }
 
-    hDlg   = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_WINDOW), NULL, DlgProc) ;
+    hDlg   = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_DIALOG), NULL, DlgProc) ;
     hAccel = LoadAccelerators (hInstance, MAKEINTRESOURCE (IDR_ACCEL)) ;
     hIcon  = LoadIcon (hInstance, MAKEINTRESOURCE (IDI_TREE)) ;
     SendMessage (hDlg, WM_SETICON, ICON_SMALL, hIcon) ;
