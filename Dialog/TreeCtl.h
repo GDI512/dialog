@@ -13,6 +13,6 @@
 #define TC_LENGTH  0x1
 #define TC_ANGLE   0x2
 
-ATOM RegisterTreeClass(HINSTANCE hInstance);
+ATOM RegisterTreeClass (HINSTANCE hInstance) ;
 
 #endif

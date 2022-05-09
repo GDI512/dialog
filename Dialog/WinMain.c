@@ -5,10 +5,7 @@
 #include <CommCtrl.h>
 
 INT_PTR Dialog_OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
-    HINSTANCE hInstance ;
-    HWND      hCtl ;
-
-    hCtl = GetDlgItem (hDlg, IDC_OFFSET) ;
+    HWND hCtl = GetDlgItem (hDlg, IDC_OFFSET) ;
     SendMessage (hCtl, TBM_SETRANGE, FALSE, MAKELPARAM (-10, 10)) ;
     SendMessage (hCtl, TBM_SETPOS, FALSE, 1) ;
     SendMessage (hCtl, TBM_SETPOS, TRUE, 0) ;
@@ -25,13 +22,12 @@ INT_PTR Dialog_OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     hCtl = GetDlgItem (hDlg, IDC_BLACK) ;
     SendMessage (hCtl, BM_SETCHECK, BST_CHECKED, 0) ;
 
-    hInstance = GetWindowLongPtr (hDlg, GWLP_HINSTANCE) ;
+    HINSTANCE hInstance = GetWindowLongPtr (hDlg, GWLP_HINSTANCE) ;
     hCtl = CreateWindow (TREE_CLASS, NULL, WS_CHILD | WS_VISIBLE, 178, 23, 334, 290, hDlg, NULL, hInstance, NULL) ;
     SetWindowLongPtr (hCtl, GWLP_ID, IDC_TREE) ;
     SendMessage (hCtl, TCM_SETPARAM, MAKEWPARAM (TC_OFFSET, 0), 0) ;
     SendMessage (hCtl, TCM_SETPARAM, MAKEWPARAM (TC_LENGTH, 0), 10) ;
     SendMessage (hCtl, TCM_SETPARAM, MAKEWPARAM (TC_ANGLE, 0), 0) ;
-
     return TRUE ;
 }
 
@@ -131,7 +127,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
     ShowWindow (hDlg, nCmdShow) ;
 
     while (GetMessage (&msg, NULL, 0, 0)) {
-        if (!IsDialogMessage (hDlg, &msg) || !TranslateAccelerator (hDlg, hAccel, &msg)) {
+        if (!IsDialogMessage (hDlg, &msg) & !TranslateAccelerator (hDlg, hAccel, &msg)) {
             TranslateMessage (&msg) ;
             DispatchMessage (&msg) ;
         }
