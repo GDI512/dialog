@@ -4,7 +4,8 @@
 #include <Windows.h>
 #include <CommCtrl.h>
 
-INT_PTR Dialog_OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+    HINSTANCE hInstance = GetWindowLongPtr (hDlg, GWLP_HINSTANCE) ;
     HWND hCtl = GetDlgItem (hDlg, IDC_OFFSET) ;
     SendMessage (hCtl, TBM_SETRANGE, FALSE, MAKELPARAM (-10, 10)) ;
     SendMessage (hCtl, TBM_SETPOS, FALSE, 1) ;
@@ -22,34 +23,33 @@ INT_PTR Dialog_OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     hCtl = GetDlgItem (hDlg, IDC_BLACK) ;
     SendMessage (hCtl, BM_SETCHECK, BST_CHECKED, 0) ;
 
-    HINSTANCE hInstance = GetWindowLongPtr (hDlg, GWLP_HINSTANCE) ;
     hCtl = CreateWindow (TREE_CLASS, NULL, WS_CHILD | WS_VISIBLE, 178, 23, 334, 290, hDlg, NULL, hInstance, NULL) ;
     SetWindowLongPtr (hCtl, GWLP_ID, IDC_TREE) ;
-    SendMessage (hCtl, TCM_SETPARAM, MAKEWPARAM (TC_OFFSET, 0), 0) ;
-    SendMessage (hCtl, TCM_SETPARAM, MAKEWPARAM (TC_LENGTH, 0), 10) ;
-    SendMessage (hCtl, TCM_SETPARAM, MAKEWPARAM (TC_ANGLE, 0), 0) ;
+    SendMessage (hCtl, TCM_SETPARAM, TC_OFFSET, 0) ;
+    SendMessage (hCtl, TCM_SETPARAM, TC_LENGTH, 10) ;
+    SendMessage (hCtl, TCM_SETPARAM, TC_ANGLE, 0) ;
     return TRUE ;
 }
 
-INT_PTR Dialog_OnHScroll (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnScroll (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     switch (GetDlgCtrlID (lParam)) {
     case IDC_OFFSET:
         lParam = SendMessage (lParam, TBM_GETPOS, 0, 0) ;
-        SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_SETPARAM, MAKEWPARAM (TC_OFFSET, 0), lParam) ;
+        SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_SETPARAM, TC_OFFSET, lParam) ;
         break ;
     case IDC_LENGTH:
         lParam = SendMessage (lParam, TBM_GETPOS, 0, 0) ;
-        SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_SETPARAM, MAKEWPARAM (TC_LENGTH, 0), lParam) ;
+        SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_SETPARAM, TC_LENGTH, lParam) ;
         break ;
     case IDC_ANGLE:
         lParam = SendMessage (lParam, TBM_GETPOS, 0, 0) ;
-        SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_SETPARAM, MAKEWPARAM (TC_ANGLE, 0), lParam) ;
+        SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_SETPARAM, TC_ANGLE, lParam) ;
         break ;
     }
-    return 0 ;
+    return SetWindowLongPtr (hDlg, DWLP_MSGRESULT, 0), TRUE ;
 }
 
-INT_PTR Dialog_OnCommand (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnCommand (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     COLORREF color ;
     if (HIWORD (wParam) == BN_CLICKED) {
         switch (LOWORD (wParam)) {
@@ -80,31 +80,31 @@ INT_PTR Dialog_OnCommand (HWND hDlg, WPARAM wParam, LPARAM lParam) {
             break ;
         }
     }
-    return 0 ;
+    return SetWindowLongPtr (hDlg, DWLP_MSGRESULT, 0), TRUE ;
 }
 
-INT_PTR Dialog_OnClose (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnClose (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     DestroyWindow (hDlg) ;
     PostQuitMessage (0) ;
-    return 0 ;
+    return SetWindowLongPtr (hDlg, DWLP_MSGRESULT, 0), TRUE ;
 }
 
 INT_PTR CALLBACK DlgProc (HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_INITDIALOG:
-        return Dialog_OnInitDialog (hDlg, wParam, lParam) ;
+        return OnInitDialog (hDlg, wParam, lParam) ;
     case WM_HSCROLL:
-        return Dialog_OnHScroll (hDlg, wParam, lParam) ;
+        return OnScroll (hDlg, wParam, lParam) ;
     case WM_COMMAND:
-        return Dialog_OnCommand (hDlg, wParam, lParam) ;
+        return OnCommand (hDlg, wParam, lParam) ;
     case WM_CLOSE:
-        return Dialog_OnClose (hDlg, wParam, lParam) ;
+        return OnClose (hDlg, wParam, lParam) ;
     case WM_CTLCOLORDLG:
-        return GetStockObject(WHITE_BRUSH) ;
+        return GetStockObject (WHITE_BRUSH) ;
     case WM_CTLCOLORSTATIC:
-        return GetStockObject(WHITE_BRUSH) ;
+        return GetStockObject (WHITE_BRUSH) ;
     default:
-        return 0 ;
+        return FALSE ;
     }
 }
 
@@ -115,8 +115,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
     MSG    msg ;
 
     if (!RegisterTreeClass (hInstance)) {
-        MessageBox (NULL, L"Failed to register the window class", L"Error", MB_OK | MB_ICONERROR) ;
-        return 0 ;
+        MessageBox (NULL, L"Failed to register the window class", L"Error", MB_ICONERROR) ;
+        return 1 ;
     }
 
     hDlg   = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_DIALOG), NULL, DlgProc) ;
