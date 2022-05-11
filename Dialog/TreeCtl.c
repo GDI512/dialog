@@ -6,14 +6,14 @@
 #define RAD(X)  X * PI / 180.0f
 
 typedef struct tagUSERDATA {
-    HDC     hMemDC ;
+    HDC hMemDC ;
     HBITMAP hBitmap ;
-    HPEN    hPen ;
-    int     cxClient ;
-    int     cyClient ;
-    float   offset ;
-    float   length ;
-    float   angle ;
+    HPEN hPen ;
+    int cxClient ;
+    int cyClient ;
+    float offset ;
+    float length ;
+    float angle ;
 } USERDATA ;
 
 static void DrawTree (USERDATA* pUser, float xPos, float yPos, float angle, int step) {
@@ -30,9 +30,9 @@ static void DrawTree (USERDATA* pUser, float xPos, float yPos, float angle, int 
 
 static HBITMAP SaveClientToBitmap (HWND hwnd) {
     USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
-    HDC       hWinDC ;
-    HBITMAP   hBitmap, hOldBmp ;
-    hWinDC  = GetDC (hwnd) ;
+    HDC hWinDC ;
+    HBITMAP hBitmap, hOldBmp ;
+    hWinDC = GetDC (hwnd) ;
     hBitmap = CreateCompatibleBitmap (hWinDC, pUser->cxClient, pUser->cyClient) ;
     hOldBmp = SelectObject (pUser->hMemDC, hBitmap) ;
     BitBlt (pUser->hMemDC, 0, 0, pUser->cxClient, pUser->cyClient, hWinDC, 0, 0, SRCCOPY) ;
@@ -43,7 +43,7 @@ static HBITMAP SaveClientToBitmap (HWND hwnd) {
 
 static LRESULT OnCreate (HWND hwnd, WPARAM wParam, LPARAM lParam) {
     USERDATA* pUser ;
-    HDC       hWinDC ;
+    HDC hWinDC ;
     pUser = HeapAlloc (GetProcessHeap (), HEAP_ZERO_MEMORY, sizeof (USERDATA)) ;
     SetWindowLongPtr (hwnd, GWLP_USERDATA, pUser) ;
     hWinDC = GetDC (hwnd) ;
@@ -64,7 +64,7 @@ static LRESULT OnDestroy (HWND hwnd, WPARAM wParam, LPARAM lParam) {
 
 static LRESULT OnSize (HWND hwnd, WPARAM wParam, LPARAM lParam) {
     USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
-    HDC       hWinDC ;
+    HDC hWinDC ;
     pUser->cxClient = LOWORD (lParam) ;
     pUser->cyClient = HIWORD (lParam) ;
     hWinDC = GetDC (hwnd) ;
@@ -75,11 +75,11 @@ static LRESULT OnSize (HWND hwnd, WPARAM wParam, LPARAM lParam) {
 }
 
 static LRESULT OnPaint (HWND hwnd, WPARAM wParam, LPARAM lParam) {
-    USERDATA*   pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
-    HDC         hWinDC ;
-    HGDIOBJ     hOldBmp, hOldPen ;
+    USERDATA* pUser = GetWindowLongPtr (hwnd, GWLP_USERDATA) ;
+    HDC hWinDC ;
+    HGDIOBJ hOldBmp, hOldPen ;
     PAINTSTRUCT paint ;
-    hWinDC  = BeginPaint (hwnd, &paint) ;
+    hWinDC = BeginPaint (hwnd, &paint) ;
     hOldBmp = SelectObject (pUser->hMemDC, pUser->hBitmap) ;
     hOldPen = SelectObject (pUser->hMemDC, pUser->hPen) ;
     BitBlt (pUser->hMemDC, 0, 0, pUser->cxClient, pUser->cyClient, pUser->hMemDC, 0, 0, WHITENESS) ;
@@ -99,10 +99,12 @@ static LRESULT OnSetParam (HWND hwnd, WPARAM wParam, LPARAM lParam) {
         break ;
     case TC_LENGTH:
         pUser->length = lParam / 4.5f ;
-        break ;
+        InvalidateRect (hwnd, NULL, FALSE) ;
+        return 0 ;
     case TC_ANGLE:
         pUser->angle = RAD (lParam * 2.0f) ;
-        break ;
+        InvalidateRect (hwnd, NULL, FALSE) ;
+        return 0 ;  
     }
     InvalidateRect (hwnd, NULL, FALSE) ;
     return 0 ;
@@ -116,7 +118,7 @@ static LRESULT OnSetColor (HWND hwnd, WPARAM wParam, LPARAM lParam) {
     return 0 ;
 }
 
-static LRESULT OnClipCopy (HWND hwnd, WPARAM wParam, LPARAM lParam) {
+static LRESULT OnClipboard (HWND hwnd, WPARAM wParam, LPARAM lParam) {
     HBITMAP hBitmap = SaveClientToBitmap (hwnd) ;
     OpenClipboard (hwnd) ;
     EmptyClipboard () ;
@@ -139,8 +141,8 @@ static LRESULT CALLBACK WndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         return OnSetParam (hwnd, wParam, lParam) ;
     case TCM_SETCOLOR:
         return OnSetColor (hwnd, wParam, lParam) ;
-    case TCM_CLIPCOPY:
-        return OnClipCopy (hwnd, wParam, lParam) ;
+    case TCM_CLIPBOARD:
+        return OnClipboard (hwnd, wParam, lParam) ;
     default:
         return DefWindowProc (hwnd, uMsg, wParam, lParam) ;
     }
@@ -148,15 +150,15 @@ static LRESULT CALLBACK WndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 ATOM RegisterTreeClass (HINSTANCE hInstance) {
     const WNDCLASS wndclass = {
-        .style         = CS_HREDRAW | CS_VREDRAW,
-        .lpfnWndProc   = WndProc,
-        .cbClsExtra    = 0,
-        .cbWndExtra    = 0,
-        .hInstance     = hInstance,
-        .hIcon         = NULL,
-        .hCursor       = LoadCursor (NULL, IDC_CROSS),
-        .hbrBackground = GetStockObject (WHITE_BRUSH),
-        .lpszMenuName  = NULL,
+        .style = CS_HREDRAW | CS_VREDRAW,
+        .lpfnWndProc = WndProc,
+        .cbClsExtra = 0,
+        .cbWndExtra = 0,
+        .hInstance = hInstance,
+        .hIcon = NULL,
+        .hCursor = LoadCursor (NULL, IDC_CROSS),
+        .hbrBackground = NULL,
+        .lpszMenuName = NULL,
         .lpszClassName = TREE_CLASS
     };
     return RegisterClass (&wndclass) ;

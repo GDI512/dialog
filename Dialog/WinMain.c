@@ -73,7 +73,7 @@ static INT_PTR OnCommand (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     } else if (HIWORD (wParam) == 1) {
         switch (LOWORD (wParam)) {
         case IDA_COPY:
-            SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_CLIPCOPY, 0, 0) ;
+            SendMessage (GetDlgItem (hDlg, IDC_TREE), TCM_CLIPBOARD, 0, 0) ;
             break ;
         case IDA_EXIT:
             SendMessage (hDlg, WM_CLOSE, 0, 0) ;
@@ -100,7 +100,6 @@ INT_PTR CALLBACK DlgProc (HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     case WM_CLOSE:
         return OnClose (hDlg, wParam, lParam) ;
     case WM_CTLCOLORDLG:
-        return GetStockObject (WHITE_BRUSH) ;
     case WM_CTLCOLORSTATIC:
         return GetStockObject (WHITE_BRUSH) ;
     default:
@@ -109,19 +108,19 @@ INT_PTR CALLBACK DlgProc (HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdShow) {
-    HWND   hDlg ;
+    HWND hDlg ;
     HACCEL hAccel ;
-    HICON  hIcon ;
-    MSG    msg ;
+    HICON hIcon ;
+    MSG msg ;
 
     if (!RegisterTreeClass (hInstance)) {
         MessageBox (NULL, L"Failed to register the window class", L"Error", MB_ICONERROR) ;
         return 1 ;
     }
 
-    hDlg   = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_DIALOG), NULL, DlgProc) ;
+    hDlg = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_DIALOG), NULL, DlgProc) ;
     hAccel = LoadAccelerators (hInstance, MAKEINTRESOURCE (IDR_ACCEL)) ;
-    hIcon  = LoadIcon (hInstance, MAKEINTRESOURCE (IDI_TREE)) ;
+    hIcon = LoadIcon (hInstance, MAKEINTRESOURCE (IDI_TREE)) ;
     SendMessage (hDlg, WM_SETICON, ICON_SMALL, hIcon) ;
     SendMessage (hDlg, WM_SETICON, ICON_BIG, hIcon) ;
     ShowWindow (hDlg, nCmdShow) ;
