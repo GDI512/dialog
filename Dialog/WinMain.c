@@ -4,7 +4,7 @@
 #include <Windows.h>
 #include <CommCtrl.h>
 
-static INT_PTR OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnInitDialog (HWND hDlg) {
     HWND hCtl = GetDlgItem (hDlg, IDC_OFFSET) ;
     SendMessage (hCtl, TBM_SETRANGE, FALSE, MAKELPARAM (-10, 10)) ;
     SendMessage (hCtl, TBM_SETPOS, FALSE, 1) ;
@@ -28,7 +28,7 @@ static INT_PTR OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     return TRUE ;
 }
 
-static INT_PTR OnScroll (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnScroll (HWND hDlg, LPARAM lParam) {
     switch (GetDlgCtrlID (lParam)) {
     case IDC_OFFSET:
         lParam = SendMessage (lParam, TBM_GETPOS, 0, 0) ;
@@ -46,7 +46,7 @@ static INT_PTR OnScroll (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     return SetWindowLongPtr (hDlg, DWLP_MSGRESULT, 0), TRUE ;
 }
 
-static INT_PTR OnCommand (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnCommand (HWND hDlg, WPARAM wParam) {
     COLORREF color ;
     if (HIWORD (wParam) == BN_CLICKED) {
         switch (LOWORD (wParam)) {
@@ -80,7 +80,7 @@ static INT_PTR OnCommand (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     return SetWindowLongPtr (hDlg, DWLP_MSGRESULT, 0), TRUE ;
 }
 
-static INT_PTR OnClose (HWND hDlg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR OnClose (HWND hDlg) {
     DestroyWindow (hDlg) ;
     PostQuitMessage (0) ;
     return SetWindowLongPtr (hDlg, DWLP_MSGRESULT, 0), TRUE ;
@@ -89,13 +89,13 @@ static INT_PTR OnClose (HWND hDlg, WPARAM wParam, LPARAM lParam) {
 INT_PTR CALLBACK DlgProc (HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_INITDIALOG:
-        return OnInitDialog (hDlg, wParam, lParam) ;
+        return OnInitDialog (hDlg) ;
     case WM_HSCROLL:
-        return OnScroll (hDlg, wParam, lParam) ;
+        return OnScroll (hDlg, lParam) ;
     case WM_COMMAND:
-        return OnCommand (hDlg, wParam, lParam) ;
+        return OnCommand (hDlg, wParam) ;
     case WM_CLOSE:
-        return OnClose (hDlg, wParam, lParam) ;
+        return OnClose (hDlg) ;
     case WM_CTLCOLORDLG:
     case WM_CTLCOLORSTATIC:
         return GetStockObject (WHITE_BRUSH) ;
