@@ -5,7 +5,6 @@
 #include <CommCtrl.h>
 
 static INT_PTR OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
-    HINSTANCE hInstance = GetWindowLongPtr (hDlg, GWLP_HINSTANCE) ;
     HWND hCtl = GetDlgItem (hDlg, IDC_OFFSET) ;
     SendMessage (hCtl, TBM_SETRANGE, FALSE, MAKELPARAM (-10, 10)) ;
     SendMessage (hCtl, TBM_SETPOS, FALSE, 1) ;
@@ -23,11 +22,9 @@ static INT_PTR OnInitDialog (HWND hDlg, WPARAM wParam, LPARAM lParam) {
     hCtl = GetDlgItem (hDlg, IDC_BLACK) ;
     SendMessage (hCtl, BM_SETCHECK, BST_CHECKED, 0) ;
 
-    hCtl = CreateWindow (TREE_CLASS, NULL, WS_CHILD | WS_VISIBLE, 178, 23, 334, 290, hDlg, NULL, hInstance, NULL) ;
+    hCtl = CreateWindow (TREE_CLASS, NULL, WS_CHILD | WS_VISIBLE, 178, 23, 334, 290, 
+        hDlg, NULL, GetWindowLongPtr (hDlg, GWLP_HINSTANCE), NULL) ;
     SetWindowLongPtr (hCtl, GWLP_ID, IDC_TREE) ;
-    SendMessage (hCtl, TCM_SETPARAM, TC_OFFSET, 0) ;
-    SendMessage (hCtl, TCM_SETPARAM, TC_LENGTH, 10) ;
-    SendMessage (hCtl, TCM_SETPARAM, TC_ANGLE, 0) ;
     return TRUE ;
 }
 
@@ -108,19 +105,19 @@ INT_PTR CALLBACK DlgProc (HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdShow) {
-    HWND hDlg ;
+    HWND   hDlg ;
     HACCEL hAccel ;
-    HICON hIcon ;
-    MSG msg ;
+    HICON  hIcon ;
+    MSG    msg ;
 
     if (!RegisterTreeClass (hInstance)) {
         MessageBox (NULL, L"Failed to register the window class", L"Error", MB_ICONERROR) ;
         return 1 ;
     }
 
-    hDlg = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_DIALOG), NULL, DlgProc) ;
+    hDlg   = CreateDialog (hInstance, MAKEINTRESOURCE (IDD_DIALOG), NULL, DlgProc) ;
     hAccel = LoadAccelerators (hInstance, MAKEINTRESOURCE (IDR_ACCEL)) ;
-    hIcon = LoadIcon (hInstance, MAKEINTRESOURCE (IDI_TREE)) ;
+    hIcon  = LoadIcon (hInstance, MAKEINTRESOURCE (IDI_TREE)) ;
     SendMessage (hDlg, WM_SETICON, ICON_SMALL, hIcon) ;
     SendMessage (hDlg, WM_SETICON, ICON_BIG, hIcon) ;
     ShowWindow (hDlg, nCmdShow) ;
